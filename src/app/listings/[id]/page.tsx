@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Header from '@/components/header';
 import { useAuth } from '@/context/auth-context';
-import { users, messages as initialMessages } from '@/lib/data';
+import { users } from '@/lib/data';
 import { notFound, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -40,9 +40,8 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
   const { user } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
-  const [messages, setMessages] = useState(initialMessages.filter(m => m.listingId === params.id));
   const [newMessage, setNewMessage] = useState('');
-  const { listings, updateListing } = useListings();
+  const { listings, updateListing, messages, addMessage } = useListings();
   const [isClient, setIsClient] = useState(false);
   const [hoverRating, setHoverRating] = useState(0);
 
@@ -51,6 +50,7 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
   }, []);
 
   const listing = listings.find((l) => l.id === params.id);
+  const listingMessages = messages.filter(m => m.listingId === params.id);
 
   if (!listing) {
     notFound();
@@ -73,7 +73,7 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
           text: newMessage,
           timestamp: Date.now(),
       }
-      setMessages([...messages, msg]);
+      addMessage(msg);
       setNewMessage('');
   }
   
@@ -271,7 +271,7 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                   {canViewChat ? (
                      <div className="flex h-[400px] flex-col">
                         <div className="flex-grow space-y-4 overflow-y-auto pr-2">
-                           {messages.map(msg => {
+                           {listingMessages.map(msg => {
                                const sender = users.find(u => u.id === msg.senderId);
                                const isMe = user?.id === msg.senderId;
                                return (
