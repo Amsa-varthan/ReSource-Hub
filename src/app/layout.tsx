@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/context/auth-context';
 import { Toaster } from '@/components/ui/toaster';
+import { ListingsProvider } from '@/context/listing-context';
 
 export const metadata: Metadata = {
   title: 'ReSource Hub',
@@ -30,8 +31,10 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <AuthProvider>
-          {children}
-          <Toaster />
+          <ListingsProvider>
+            {children}
+            <Toaster />
+          </ListingsProvider>
         </AuthProvider>
       </body>
     </html>

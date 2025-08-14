@@ -3,7 +3,7 @@
 import Header from '@/components/header';
 import ListingCard from '@/components/listing-card';
 import { useAuth } from '@/context/auth-context';
-import { listings as allListings } from '@/lib/data';
+import { useListings } from '@/context/listing-context';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,6 +11,7 @@ import { PlusCircle } from 'lucide-react';
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const { listings } = useListings();
 
   if (!user || user.role !== 'donor') {
     return (
@@ -28,10 +29,10 @@ export default function DashboardPage() {
     );
   }
 
-  const myActiveListings = allListings.filter(
+  const myActiveListings = listings.filter(
     (l) => l.donorId === user.id && l.status !== 'completed'
   );
-  const myCompletedListings = allListings.filter(
+  const myCompletedListings = listings.filter(
     (l) => l.donorId === user.id && l.status === 'completed'
   );
 

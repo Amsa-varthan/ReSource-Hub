@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Header from '@/components/header';
 import { useAuth } from '@/context/auth-context';
-import { listings as allListings, users, messages as initialMessages } from '@/lib/data';
+import { users, messages as initialMessages } from '@/lib/data';
 import { notFound, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
+import { useListings } from '@/context/listing-context';
 
 export default function ListingDetailPage({ params }: { params: { id: string } }) {
   const { user } = useAuth();
@@ -40,8 +41,9 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
   const { toast } = useToast();
   const [messages, setMessages] = useState(initialMessages.filter(m => m.listingId === params.id));
   const [newMessage, setNewMessage] = useState('');
+  const { listings, updateListing } = useListings();
 
-  const listing = allListings.find((l) => l.id === params.id);
+  const listing = listings.find((l) => l.id === params.id);
 
   if (!listing) {
     notFound();
@@ -69,14 +71,27 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
   }
   
   const handleClaim = (cashback?: number) => {
+    if (!user) return;
+    updateListing(listing.id, {
+      status: 'claimed',
+      collectorId: user.id,
+      cashbackOffer: cashback,
+    });
     toast({
         title: 'Item Claimed!',
         description: `You have successfully claimed "${listing.title}".`
     })
-    if(cashback) {
-      console.log(`Offered $${cashback} cashback. 10% fee will be applied.`);
-    }
-    // Here you would typically update the listing status in the backend.
+  }
+
+  const handleMarkAsPickedUp = () => {
+    updateListing(listing.id, {
+      status: 'completed',
+      completedAt: new Date().toISOString(),
+    });
+    toast({
+      title: 'Pickup Confirmed!',
+      description: `The pickup for "${listing.title}" has been completed.`,
+    });
   }
 
   return (
@@ -172,17 +187,14 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                            <AlertDialogAction onClick={() => handleClaim()}>Claim without Offer</AlertDialogAction>
-                          <AlertDialogAction onClick={() => handleClaim(20)}>Submit Offer & Claim</AlertDialogAction>
+                          <AlertDialogAction onClick={() => handleClaim(parseFloat((document.getElementById('cashback-amount') as HTMLInputElement).value) || 0)}>Submit Offer & Claim</AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
                   )}
 
-                  {user?.id === listing.donorId && listing.status === 'claimed' && (
-                     <Button className="w-full" variant="secondary">Mark as Picked Up</Button>
-                  )}
-                   {user?.id === listing.collectorId && listing.status === 'claimed' && (
-                     <Button className="w-full" variant="secondary">Mark as Picked Up</Button>
+                  {(user?.id === listing.donorId || user?.id === listing.collectorId) && listing.status === 'claimed' && (
+                     <Button className="w-full" variant="secondary" onClick={handleMarkAsPickedUp}>Mark as Picked Up</Button>
                   )}
                 </CardContent>
               </Card>

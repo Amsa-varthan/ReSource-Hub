@@ -3,12 +3,13 @@
 import Header from '@/components/header';
 import ListingCard from '@/components/listing-card';
 import { useAuth } from '@/context/auth-context';
-import { listings as allListings } from '@/lib/data';
+import { useListings } from '@/context/listing-context';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 
 export default function MarketplacePage() {
   const { user } = useAuth();
+  const { listings } = useListings();
 
   if (!user || user.role !== 'collector') {
     return (
@@ -26,7 +27,7 @@ export default function MarketplacePage() {
     );
   }
 
-  const availableListings = allListings.filter(
+  const availableListings = listings.filter(
     (l) => l.status === 'available' && l.city === user.city
   );
 

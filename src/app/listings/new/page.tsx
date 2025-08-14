@@ -23,6 +23,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, ImageUp, Loader, Wand2 } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
+import { useListings } from '@/context/listing-context';
 
 const listingSchema = z.object({
   title: z
@@ -42,6 +43,7 @@ export default function NewListingPage() {
   const { user } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+  const { addListing } = useListings();
   const [isPending, startTransition] = useTransition();
   const [photos, setPhotos] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -51,7 +53,7 @@ export default function NewListingPage() {
     defaultValues: {
       title: '',
       description: '',
-      address: '',
+      address: user?.city ? `${user.city}` : '',
     },
   });
 
@@ -71,7 +73,7 @@ export default function NewListingPage() {
           }
           filesProcessed++;
           if (filesProcessed === filesArray.length) {
-            setPhotos(dataUrls);
+            setPhotos((prevPhotos) => [...prevPhotos, ...dataUrls]);
           }
         };
         reader.readAsDataURL(file);
@@ -109,13 +111,23 @@ export default function NewListingPage() {
   };
 
   function onSubmit(values: ListingFormValues) {
-    console.log(values);
+    if (!user) return;
+    const newListing = {
+      id: `listing-${Date.now()}`,
+      ...values,
+      images: photos.length > 0 ? photos : ['https://placehold.co/600x400.png'],
+      status: 'available' as const,
+      donorId: user.id,
+      city: user.city || 'Unknown City',
+      createdAt: new Date().toISOString(),
+    };
+    addListing(newListing);
     toast({
       title: 'Listing Created!',
       description:
         'Your e-waste listing has been successfully created. You will be redirected.',
     });
-    setTimeout(() => router.push('/dashboard'), 2000);
+    router.push('/dashboard');
   }
 
   if (!user || user.role !== 'donor') {
