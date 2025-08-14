@@ -12,6 +12,7 @@ interface AuthContextType {
   login: (role: UserRole) => void;
   logout: () => void;
   signup: (role: UserRole, name: string) => void;
+  isInitialized: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,7 +20,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const GUEST_USER: User = { id: 'guest', name: 'Guest', role: 'guest' };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(GUEST_USER);
+  const [isInitialized, setIsInitialized] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -32,6 +34,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       setUser(GUEST_USER);
+    } finally {
+        setIsInitialized(true);
     }
   }, []);
 
@@ -70,14 +74,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push('/');
   };
   
-  // Render children only when user state is determined
-  if (user === null) {
-    return null;
-  }
-
   return (
-    <AuthContext.Provider value={{ user, setUser, login, logout, signup }}>
-      {children}
+    <AuthContext.Provider value={{ user, setUser, login, logout, signup, isInitialized }}>
+      {isInitialized ? children : null}
     </AuthContext.Provider>
   );
 }
