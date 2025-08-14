@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Header from '@/components/header';
 import { useAuth } from '@/context/auth-context';
+import { useState, useEffect } from 'react';
 
 const features = [
   {
@@ -68,6 +69,13 @@ const howItWorks = [
 
 export default function LandingPage() {
   const { user } = useAuth();
+  const [year, setYear] = useState<number | null>(null);
+
+  useEffect(() => {
+    setYear(new Date().getFullYear());
+  }, []);
+
+
   const getStartedLink =
     user?.role === 'donor'
       ? '/dashboard'
@@ -211,7 +219,7 @@ export default function LandingPage() {
       <footer className="border-t bg-white">
         <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 py-6 sm:flex-row md:px-6">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} ReSource Hub. All rights reserved.
+            © {year ?? new Date().getFullYear()} ReSource Hub. All rights reserved.
           </p>
           <div className="flex gap-4">
             <Link
