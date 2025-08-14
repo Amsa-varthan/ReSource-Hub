@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { User, UserRole } from '@/lib/types';
@@ -10,6 +11,7 @@ interface AuthContextType {
   setUser: (user: User | null) => void;
   login: (role: UserRole) => void;
   logout: () => void;
+  signup: (role: UserRole, name: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -47,6 +49,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const signup = (role: UserRole, name: string) => {
+    const baseUser = users.find(u => u.role === role);
+    if (!baseUser) return; 
+
+    const newUser: User = {
+      ...baseUser,
+      id: `user-${Date.now()}`,
+      name: name,
+    };
+    
+    setUser(newUser);
+    localStorage.setItem('user', JSON.stringify(newUser));
+  };
+
+
   const logout = () => {
     setUser(GUEST_USER);
     localStorage.removeItem('user');
@@ -59,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, setUser, login, logout }}>
+    <AuthContext.Provider value={{ user, setUser, login, logout, signup }}>
       {children}
     </AuthContext.Provider>
   );

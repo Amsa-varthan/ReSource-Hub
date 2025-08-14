@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -18,14 +19,28 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/header';
+import type { UserRole } from '@/lib/types';
 
 export default function SignupPage() {
-  const { login } = useAuth();
+  const { signup } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+  
+  const [donorName, setDonorName] = useState('');
+  const [collectorName, setCollectorName] = useState('');
 
   const handleSignup = (role: 'donor' | 'collector') => {
-    login(role);
+    const name = role === 'donor' ? donorName : collectorName;
+    if (!name) {
+        toast({
+            variant: 'destructive',
+            title: 'Name is required',
+            description: 'Please enter a name to sign up.',
+        });
+        return;
+    }
+
+    signup(role, name);
     toast({
       title: 'Signup Successful',
       description: `Your account has been created as a ${role}.`,
@@ -57,7 +72,7 @@ export default function SignupPage() {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="donor-name">Full Name</Label>
-                    <Input id="donor-name" placeholder="John Doe" />
+                    <Input id="donor-name" placeholder="John Doe" value={donorName} onChange={(e) => setDonorName(e.target.value)} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="donor-email">Email</Label>
@@ -92,7 +107,7 @@ export default function SignupPage() {
                 <CardContent className="space-y-4">
                      <div className="space-y-2">
                         <Label htmlFor="collector-name">Business Name</Label>
-                        <Input id="collector-name" placeholder="ABC Recycling" />
+                        <Input id="collector-name" placeholder="ABC Recycling" value={collectorName} onChange={(e) => setCollectorName(e.target.value)} />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="collector-email">Business Email</Label>
