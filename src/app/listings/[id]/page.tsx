@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from '@/components/header';
 import { useAuth } from '@/context/auth-context';
 import { users, messages as initialMessages } from '@/lib/data';
@@ -42,6 +42,11 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
   const [messages, setMessages] = useState(initialMessages.filter(m => m.listingId === params.id));
   const [newMessage, setNewMessage] = useState('');
   const { listings, updateListing } = useListings();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const listing = listings.find((l) => l.id === params.id);
 
@@ -149,7 +154,7 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                   <Separator className="my-6" />
                    <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
                      <p><strong>Donor:</strong> {donor?.name}</p>
-                     <p><strong>Listed on:</strong> {new Date(listing.createdAt).toLocaleDateString()}</p>
+                     <p><strong>Listed on:</strong> {isClient ? new Date(listing.createdAt).toLocaleDateString() : ''}</p>
                      {collector && <p><strong>Collector:</strong> {collector.name}</p>}
                      {listing.cashbackOffer && <p><strong>Cashback Offer:</strong> ${listing.cashbackOffer.toFixed(2)}</p>}
                    </div>

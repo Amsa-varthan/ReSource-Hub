@@ -1,5 +1,5 @@
 'use client';
-
+import { useState, useEffect } from 'react';
 import Header from '@/components/header';
 import { useAuth } from '@/context/auth-context';
 import { applications } from '@/lib/data';
@@ -18,6 +18,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function AdminPage() {
   const { user } = useAuth();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
 
   if (!user || user.role !== 'admin') {
     return (
@@ -72,7 +78,7 @@ export default function AdminPage() {
                         </TableCell>
                         <TableCell>{app.registrationNumber}</TableCell>
                         <TableCell>
-                          {new Date(app.submittedAt).toLocaleDateString()}
+                          {isClient ? new Date(app.submittedAt).toLocaleDateString() : ''}
                         </TableCell>
                         <TableCell>
                           <Button variant="outline" size="sm" asChild>
