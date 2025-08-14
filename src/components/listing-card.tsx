@@ -40,7 +40,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
       <CardFooter className="flex justify-between p-4 pt-0">
         <div className="flex items-center text-sm text-muted-foreground">
           <MapPin className="mr-1 h-4 w-4" />
-          <span>{listing.city}</span>
+          <span className="truncate">{listing.address}</span>
         </div>
         <Button asChild variant="ghost" size="sm">
           <Link href={`/listings/${listing.id}`}>

@@ -30,7 +30,7 @@ export default function DashboardPage() {
   }
 
   const myActiveListings = listings.filter(
-    (l) => l.donorId === user.id && l.status !== 'completed'
+    (l) => l.donorId === user.id && (l.status === 'available' || l.status === 'claimed')
   );
   const myCompletedListings = listings.filter(
     (l) => l.donorId === user.id && l.status === 'completed'
