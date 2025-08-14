@@ -2,10 +2,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { MapPin } from 'lucide-react';
+import { MapPin, ArrowRight, Tag } from 'lucide-react';
 import type { Listing } from '@/lib/types';
 import { Button } from './ui/button';
-import { ArrowRight } from 'lucide-react';
 
 interface ListingCardProps {
   listing: Listing;
@@ -22,12 +21,19 @@ export default function ListingCard({ listing }: ListingCardProps) {
           objectFit="cover"
           data-ai-hint="e-waste electronics"
         />
-        <Badge
-          className="absolute right-2 top-2"
-          variant={listing.status === 'available' ? 'default' : 'secondary'}
-        >
-          {listing.status}
-        </Badge>
+        <div className='absolute right-2 top-2 flex flex-col items-end gap-2'>
+            <Badge
+              variant={listing.status === 'available' ? 'default' : 'secondary'}
+            >
+              {listing.status}
+            </Badge>
+             <Badge
+              variant={'outline'}
+              className="bg-background/80 backdrop-blur-sm"
+            >
+              {listing.category}
+            </Badge>
+        </div>
       </CardHeader>
       <CardContent className="flex-grow p-4">
         <CardTitle className="mb-2 line-clamp-2 text-lg font-bold">

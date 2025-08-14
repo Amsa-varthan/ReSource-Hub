@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -17,6 +18,13 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/auth-context';
 import { useRouter } from 'next/navigation';
@@ -24,6 +32,7 @@ import { ArrowLeft, ImageUp, Loader, Wand2 } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { useListings } from '@/context/listing-context';
+import type { ListingCategory } from '@/lib/types';
 
 const listingSchema = z.object({
   title: z
@@ -35,6 +44,7 @@ const listingSchema = z.object({
   address: z
     .string()
     .min(10, { message: 'Please enter a valid pickup address.' }),
+  category: z.enum(['Laptops', 'Phones', 'Cables', 'Components', 'Other']),
 });
 
 type ListingFormValues = z.infer<typeof listingSchema>;
@@ -54,6 +64,7 @@ export default function NewListingPage() {
       title: '',
       description: '',
       address: user?.city ? `${user.city}` : '',
+      category: 'Other',
     },
   });
 
@@ -258,6 +269,36 @@ export default function NewListingPage() {
                             {...field}
                           />
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                   <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Category</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a category" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Laptops">Laptops</SelectItem>
+                            <SelectItem value="Phones">Phones</SelectItem>
+                             <SelectItem value="Components">PC Components</SelectItem>
+                            <SelectItem value="Cables">Cables & Wires</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          This helps collectors find what they're looking for.
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}

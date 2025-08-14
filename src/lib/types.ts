@@ -8,6 +8,7 @@ export interface User {
 }
 
 export type ListingStatus = 'available' | 'claimed' | 'completed';
+export type ListingCategory = 'Laptops' | 'Phones' | 'Cables' | 'Components' | 'Other';
 
 export interface Listing {
   id: string;
@@ -15,6 +16,7 @@ export interface Listing {
   description: string;
   images: string[];
   status: ListingStatus;
+  category: ListingCategory;
   donorId: string;
   collectorId?: string;
   city: string;
@@ -27,7 +29,7 @@ export interface Listing {
 export type CollectorAppStatus = 'pending' | 'approved' | 'rejected';
 
 export interface CollectorApplication {
-  id: string;
+  id:string;
   businessName: string;
   registrationNumber: string;
   certificationPdf: string;
