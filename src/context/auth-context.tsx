@@ -20,7 +20,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const GUEST_USER: User = { id: 'guest', name: 'Guest', role: 'guest' };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(GUEST_USER);
+  const [user, setUser] = useState<User | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const router = useRouter();
 
@@ -74,9 +74,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push('/');
   };
   
+  if (!isInitialized) {
+      return null;
+  }
+
   return (
     <AuthContext.Provider value={{ user, setUser, login, logout, signup, isInitialized }}>
-      {isInitialized ? children : null}
+      {children}
     </AuthContext.Provider>
   );
 }
