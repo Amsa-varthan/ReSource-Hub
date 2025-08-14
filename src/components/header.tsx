@@ -2,22 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Button } from './ui/button';
 import { useAuth } from '@/context/auth-context';
-import type { UserRole } from '@/lib/types';
 import Logo from './logo';
 import { cn } from '@/lib/utils';
-import { LayoutGrid, LayoutList, ShieldCheck } from 'lucide-react';
+import { LayoutGrid, LayoutList, LogOut, ShieldCheck, UserCircle } from 'lucide-react';
 
 export default function Header() {
-  const { user, login } = useAuth();
+  const { user, logout } = useAuth();
   const pathname = usePathname();
 
   const navLinks = [
@@ -25,10 +17,6 @@ export default function Header() {
     { href: '/marketplace', label: 'Marketplace', role: 'collector', icon: <LayoutGrid /> },
     { href: '/admin', label: 'Admin', role: 'admin', icon: <ShieldCheck /> },
   ];
-
-  const handleRoleChange = (role: UserRole) => {
-    login(role);
-  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -60,19 +48,26 @@ export default function Header() {
                 ))}
           </nav>
           <div className="flex flex-1 items-center justify-end gap-4">
-             <div className="w-48">
-                <Select onValueChange={handleRoleChange} value={user?.role}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select a role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="guest">Guest</SelectItem>
-                    <SelectItem value="donor">Household (Donor)</SelectItem>
-                    <SelectItem value="collector">Business (Collector)</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                  </SelectContent>
-                </Select>
-             </div>
+             {user && user.role !== 'guest' ? (
+                <>
+                  <span className="text-sm font-medium text-muted-foreground hidden sm:inline-block">
+                    Welcome, {user.name}
+                  </span>
+                  <Button variant="ghost" size="icon" onClick={logout}>
+                    <LogOut className="h-5 w-5" />
+                    <span className="sr-only">Logout</span>
+                  </Button>
+                </>
+             ) : (
+                <>
+                  <Button variant="ghost" asChild>
+                    <Link href="/login">Login</Link>
+                  </Button>
+                  <Button asChild>
+                    <Link href="/signup">Sign Up</Link>
+                  </Button>
+                </>
+             )}
             {user?.role === 'donor' && (
               <Button asChild>
                 <Link href="/listings/new">Create Listing</Link>

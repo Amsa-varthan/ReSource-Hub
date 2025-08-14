@@ -1,8 +1,9 @@
 'use client';
 
 import type { User, UserRole } from '@/lib/types';
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { users } from '@/lib/data';
+import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
   user: User | null;
@@ -16,20 +17,46 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const GUEST_USER: User = { id: 'guest', name: 'Guest', role: 'guest' };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(GUEST_USER);
+  const [user, setUser] = useState<User | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      } else {
+        setUser(GUEST_USER);
+      }
+    } catch (error) {
+      setUser(GUEST_USER);
+    }
+  }, []);
 
   const login = (role: UserRole) => {
+    let userToLogin: User | undefined;
     if (role === 'guest') {
-      setUser(GUEST_USER);
-      return;
+      userToLogin = GUEST_USER;
+    } else {
+      userToLogin = users.find((u) => u.role === role);
     }
-    const userToLogin = users.find((u) => u.role === role);
-    setUser(userToLogin || GUEST_USER);
+    
+    if (userToLogin) {
+      setUser(userToLogin);
+      localStorage.setItem('user', JSON.stringify(userToLogin));
+    }
   };
 
   const logout = () => {
     setUser(GUEST_USER);
+    localStorage.removeItem('user');
+    router.push('/');
   };
+  
+  // Render children only when user state is determined
+  if (user === null) {
+    return null;
+  }
 
   return (
     <AuthContext.Provider value={{ user, setUser, login, logout }}>
