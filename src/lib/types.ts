@@ -24,6 +24,7 @@ export interface Listing {
   cashbackOffer?: number;
   createdAt: string;
   completedAt?: string;
+  rating?: number;
 }
 
 export type CollectorAppStatus = 'pending' | 'approved' | 'rejected';

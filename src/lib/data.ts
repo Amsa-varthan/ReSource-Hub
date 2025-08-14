@@ -78,6 +78,7 @@ export const listings: Listing[] = [
     cashbackOffer: 50,
     createdAt: '2023-09-15T09:00:00Z',
     completedAt: '2023-09-18T16:00:00Z',
+    rating: 5,
   },
     {
     id: 'listing-5',

@@ -7,7 +7,7 @@ import { users, messages as initialMessages } from '@/lib/data';
 import { notFound, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, HandCoins, MapPin, Send } from 'lucide-react';
+import { ArrowLeft, HandCoins, MapPin, Send, Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { useListings } from '@/context/listing-context';
+import { cn } from '@/lib/utils';
 
 export default function ListingDetailPage({ params }: { params: { id: string } }) {
   const { user } = useAuth();
@@ -43,6 +44,7 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
   const [newMessage, setNewMessage] = useState('');
   const { listings, updateListing } = useListings();
   const [isClient, setIsClient] = useState(false);
+  const [hoverRating, setHoverRating] = useState(0);
 
   useEffect(() => {
     setIsClient(true);
@@ -98,6 +100,17 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
       description: `The pickup for "${listing.title}" has been completed.`,
     });
   }
+
+  const handleSetRating = (rating: number) => {
+    updateListing(listing.id, { rating });
+    toast({
+      title: 'Rating Submitted!',
+      description: `You rated this transaction ${rating} stars. Thank you for your feedback!`,
+    });
+  };
+
+  const showRatingArea =
+    listing.status === 'completed' && user?.id === listing.donorId;
 
   return (
     <div className="flex min-h-screen flex-col bg-muted/40">
@@ -156,6 +169,7 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                      {isClient && <p><strong>Listed on:</strong> {new Date(listing.createdAt).toLocaleDateString()}</p>}
                      {collector && <p><strong>Collector:</strong> {collector.name}</p>}
                      {listing.cashbackOffer && <p><strong>Cashback Offer:</strong> ${listing.cashbackOffer.toFixed(2)}</p>}
+                     {listing.rating && <p><strong>Rating:</strong> {listing.rating}/5 Stars</p>}
                    </div>
 
                 </CardContent>
@@ -200,6 +214,52 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                   {(user?.id === listing.donorId || user?.id === listing.collectorId) && listing.status === 'claimed' && (
                      <Button className="w-full" variant="secondary" onClick={handleMarkAsPickedUp}>Mark as Picked Up</Button>
                   )}
+
+                  {showRatingArea && (
+                    <div className="mt-4 rounded-md border p-4">
+                      <h4 className="mb-2 font-semibold">Rate this Pickup</h4>
+                      {listing.rating ? (
+                         <div className="flex items-center gap-2">
+                           <p className="text-muted-foreground">You rated:</p>
+                           <div className="flex">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                key={star}
+                                className={cn(
+                                    'h-5 w-5',
+                                    listing.rating && listing.rating >= star
+                                    ? 'text-yellow-400 fill-yellow-400'
+                                    : 'text-gray-300'
+                                )}
+                                />
+                            ))}
+                           </div>
+                         </div>
+                      ) : (
+                        <div 
+                          className="flex items-center"
+                          onMouseLeave={() => setHoverRating(0)}
+                        >
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              onMouseEnter={() => setHoverRating(star)}
+                              onClick={() => handleSetRating(star)}
+                              className="text-gray-300 hover:text-yellow-400"
+                            >
+                              <Star
+                                className={cn(
+                                  'h-6 w-6 transition-colors',
+                                  hoverRating >= star ? 'text-yellow-400 fill-yellow-400' : ''
+                                )}
+                              />
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                 </CardContent>
               </Card>
 
