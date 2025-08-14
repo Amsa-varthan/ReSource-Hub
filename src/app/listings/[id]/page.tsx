@@ -125,9 +125,8 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                             <Image
                               src={img}
                               alt={`${listing.title} image ${index + 1}`}
-                              layout="fill"
-                              objectFit="cover"
-                              className="rounded-md"
+                              fill
+                              className="rounded-md object-cover"
                               data-ai-hint="e-waste electronics"
                             />
                           </div>
@@ -154,7 +153,7 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                   <Separator className="my-6" />
                    <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
                      <p><strong>Donor:</strong> {donor?.name}</p>
-                     <p><strong>Listed on:</strong> {isClient ? new Date(listing.createdAt).toLocaleDateString() : ''}</p>
+                     {isClient && <p><strong>Listed on:</strong> {new Date(listing.createdAt).toLocaleDateString()}</p>}
                      {collector && <p><strong>Collector:</strong> {collector.name}</p>}
                      {listing.cashbackOffer && <p><strong>Cashback Offer:</strong> ${listing.cashbackOffer.toFixed(2)}</p>}
                    </div>
