@@ -4,38 +4,23 @@ import { useState, useEffect } from 'react';
 import Header from '@/components/header';
 import { useAuth } from '@/context/auth-context';
 import { users } from '@/lib/data';
-import { notFound, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, HandCoins, MapPin, Send, Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { useListings } from '@/context/listing-context';
 import { cn } from '@/lib/utils';
 
+// This is the correct way to type props for a dynamic page
 export default function ListingDetailPage({ params }: { params: { id: string } }) {
   const { user } = useAuth();
   const router = useRouter();
@@ -45,19 +30,48 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
   const [isClient, setIsClient] = useState(false);
   const [hoverRating, setHoverRating] = useState(0);
 
+  // IMPROVEMENT: Use React state to manage the cashback input value instead of direct DOM access.
+  const [cashbackAmount, setCashbackAmount] = useState('');
+
   useEffect(() => {
     setIsClient(true);
   }, []);
 
   const listing = listings.find((l) => l.id === params.id);
   const listingMessages = messages.filter(m => m.listingId === params.id);
+  
+  // IMPROVEMENT: Handle the "not found" case by returning JSX.
+  // This is safer inside a client component than calling notFound() after hooks.
+  if (!isClient) {
+    // Render a loading state or nothing during server-side rendering / initial hydration
+    return <div>Loading...</div>;
+  }
 
   if (!listing) {
-    notFound();
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center">
+        <h1 className="text-2xl font-bold">Listing Not Found</h1>
+        <Button onClick={() => router.back()} className="mt-4">
+          Go Back
+        </Button>
+      </div>
+    );
   }
   
   const donor = users.find((u) => u.id === listing.donorId);
   const collector = users.find((u) => u.id === listing.collectorId);
+
+  // IMPROVEMENT: Add a check for the donor to prevent potential errors if not found.
+  if (!donor) {
+     return (
+      <div className="flex min-h-screen flex-col items-center justify-center">
+        <h1 className="text-2xl font-bold">Error: Donor not found for this listing.</h1>
+        <Button onClick={() => router.back()} className="mt-4">
+          Go Back
+        </Button>
+      </div>
+    );
+  }
 
   const canViewChat =
     user?.role === 'admin' ||
@@ -65,30 +79,34 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
       (user?.id === listing.donorId || user?.id === listing.collectorId));
 
   const handleSendMessage = () => {
-      if(newMessage.trim() === '' || !user) return;
-      const msg = {
-          id: `msg-${Date.now()}`,
-          listingId: listing.id,
-          senderId: user.id,
-          text: newMessage,
-          timestamp: Date.now(),
-      }
-      addMessage(msg);
-      setNewMessage('');
-  }
+    if (newMessage.trim() === '' || !user) return;
+    const msg = {
+      id: `msg-${Date.now()}`,
+      listingId: listing.id,
+      senderId: user.id,
+      text: newMessage,
+      timestamp: Date.now(),
+    };
+    addMessage(msg);
+    setNewMessage('');
+  };
   
-  const handleClaim = (cashback?: number) => {
+  const handleClaim = (isOfferSubmitted: boolean) => {
     if (!user) return;
+    
+    // IMPROVEMENT: Use the state variable for cashback amount.
+    const offer = isOfferSubmitted ? parseFloat(cashbackAmount) || 0 : undefined;
+
     updateListing(listing.id, {
       status: 'claimed',
       collectorId: user.id,
-      cashbackOffer: cashback,
+      cashbackOffer: offer,
     });
     toast({
-        title: 'Item Claimed!',
-        description: `You have successfully claimed "${listing.title}".`
-    })
-  }
+      title: 'Item Claimed!',
+      description: `You have successfully claimed "${listing.title}".`
+    });
+  };
 
   const handleMarkAsPickedUp = () => {
     updateListing(listing.id, {
@@ -99,7 +117,7 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
       title: 'Pickup Confirmed!',
       description: `The pickup for "${listing.title}" has been completed.`,
     });
-  }
+  };
 
   const handleSetRating = (rating: number) => {
     updateListing(listing.id, { rating });
@@ -165,11 +183,11 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
 
                   <Separator className="my-6" />
                    <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
-                     <p><strong>Donor:</strong> {donor?.name}</p>
-                     {isClient && <p><strong>Listed on:</strong> {new Date(listing.createdAt).toLocaleDateString()}</p>}
-                     {collector && <p><strong>Collector:</strong> {collector.name}</p>}
-                     {listing.cashbackOffer && <p><strong>Cashback Offer:</strong> ${listing.cashbackOffer.toFixed(2)}</p>}
-                     {listing.rating && <p><strong>Rating:</strong> {listing.rating}/5 Stars</p>}
+                      <p><strong>Donor:</strong> {donor.name}</p>
+                      <p><strong>Listed on:</strong> {new Date(listing.createdAt).toLocaleDateString()}</p>
+                      {collector && <p><strong>Collector:</strong> {collector.name}</p>}
+                      {listing.cashbackOffer != null && <p><strong>Cashback Offer:</strong> ${listing.cashbackOffer.toFixed(2)}</p>}
+                      {listing.rating && <p><strong>Rating:</strong> {listing.rating}/5 Stars</p>}
                    </div>
 
                 </CardContent>
@@ -182,7 +200,7 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                 </CardHeader>
                 <CardContent>
                   {user?.role === 'collector' && listing.status === 'available' && (
-                     <AlertDialog>
+                    <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button className="w-full">
                           <HandCoins className="mr-2 h-4 w-4" />
@@ -199,67 +217,75 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                         <div className="grid gap-4 py-4">
                           <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="cashback-amount" className="text-right">Amount ($)</Label>
-                            <Input id="cashback-amount" type="number" placeholder="e.g., 20.00" className="col-span-3"/>
+                            {/* IMPROVEMENT: Controlled input using React state */}
+                            <Input 
+                              id="cashback-amount" 
+                              type="number" 
+                              placeholder="e.g., 20.00" 
+                              className="col-span-3"
+                              value={cashbackAmount}
+                              onChange={(e) => setCashbackAmount(e.target.value)}
+                            />
                           </div>
                         </div>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
-                           <AlertDialogAction onClick={() => handleClaim()}>Claim without Offer</AlertDialogAction>
-                          <AlertDialogAction onClick={() => handleClaim(parseFloat((document.getElementById('cashback-amount') as HTMLInputElement).value) || 0)}>Submit Offer & Claim</AlertDialogAction>
+                           <AlertDialogAction onClick={() => handleClaim(false)}>Claim without Offer</AlertDialogAction>
+                           {/* IMPROVEMENT: Use the state variable in the handler */}
+                          <AlertDialogAction onClick={() => handleClaim(true)}>Submit Offer & Claim</AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
                   )}
 
                   {(user?.id === listing.donorId || user?.id === listing.collectorId) && listing.status === 'claimed' && (
-                     <Button className="w-full" variant="secondary" onClick={handleMarkAsPickedUp}>Mark as Picked Up</Button>
-                  )}
+                       <Button className="w-full" variant="secondary" onClick={handleMarkAsPickedUp}>Mark as Picked Up</Button>
+                   )}
 
-                  {showRatingArea && (
-                    <div className="mt-4 rounded-md border p-4">
-                      <h4 className="mb-2 font-semibold">Rate this Pickup</h4>
-                      {listing.rating ? (
-                         <div className="flex items-center gap-2">
-                           <p className="text-muted-foreground">You rated:</p>
-                           <div className="flex">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                                <Star
-                                key={star}
-                                className={cn(
-                                    'h-5 w-5',
-                                    listing.rating && listing.rating >= star
-                                    ? 'text-yellow-400 fill-yellow-400'
-                                    : 'text-gray-300'
-                                )}
-                                />
-                            ))}
+                   {showRatingArea && (
+                     <div className="mt-4 rounded-md border p-4">
+                       <h4 className="mb-2 font-semibold">Rate this Pickup</h4>
+                       {listing.rating ? (
+                           <div className="flex items-center gap-2">
+                             <p className="text-muted-foreground">You rated:</p>
+                             <div className="flex">
+                               {[1, 2, 3, 4, 5].map((star) => (
+                                 <Star
+                                   key={star}
+                                   className={cn(
+                                     'h-5 w-5',
+                                     listing.rating && listing.rating >= star
+                                     ? 'text-yellow-400 fill-yellow-400'
+                                     : 'text-gray-300'
+                                   )}
+                                 />
+                               ))}
+                             </div>
                            </div>
+                       ) : (
+                         <div 
+                           className="flex items-center"
+                           onMouseLeave={() => setHoverRating(0)}
+                         >
+                           {[1, 2, 3, 4, 5].map((star) => (
+                             <button
+                               key={star}
+                               onMouseEnter={() => setHoverRating(star)}
+                               onClick={() => handleSetRating(star)}
+                               className="text-gray-300 hover:text-yellow-400"
+                             >
+                               <Star
+                                 className={cn(
+                                   'h-6 w-6 transition-colors',
+                                   hoverRating >= star ? 'text-yellow-400 fill-yellow-400' : ''
+                                 )}
+                               />
+                             </button>
+                           ))}
                          </div>
-                      ) : (
-                        <div 
-                          className="flex items-center"
-                          onMouseLeave={() => setHoverRating(0)}
-                        >
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <button
-                              key={star}
-                              onMouseEnter={() => setHoverRating(star)}
-                              onClick={() => handleSetRating(star)}
-                              className="text-gray-300 hover:text-yellow-400"
-                            >
-                              <Star
-                                className={cn(
-                                  'h-6 w-6 transition-colors',
-                                  hoverRating >= star ? 'text-yellow-400 fill-yellow-400' : ''
-                                )}
-                              />
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
+                       )}
+                     </div>
+                   )}
                 </CardContent>
               </Card>
 
@@ -269,32 +295,32 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                 </CardHeader>
                 <CardContent>
                   {canViewChat ? (
-                     <div className="flex h-[400px] flex-col">
-                        <div className="flex-grow space-y-4 overflow-y-auto pr-2">
-                           {listingMessages.map(msg => {
+                       <div className="flex h-[400px] flex-col">
+                         <div className="flex-grow space-y-4 overflow-y-auto pr-2">
+                            {listingMessages.map(msg => {
                                const sender = users.find(u => u.id === msg.senderId);
                                const isMe = user?.id === msg.senderId;
                                return (
-                                <div key={msg.id} className={`flex items-end gap-2 ${isMe ? 'justify-end' : ''}`}>
-                                   {!isMe && <Avatar className="h-8 w-8"><AvatarFallback>{sender?.name.charAt(0)}</AvatarFallback></Avatar>}
-                                   <div className={`max-w-xs rounded-lg p-3 ${isMe ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
-                                       <p className="text-sm">{msg.text}</p>
-                                   </div>
-                                    {isMe && <Avatar className="h-8 w-8"><AvatarFallback>{sender?.name.charAt(0)}</AvatarFallback></Avatar>}
-                                </div>
+                                 <div key={msg.id} className={`flex items-end gap-2 ${isMe ? 'justify-end' : ''}`}>
+                                     {!isMe && <Avatar className="h-8 w-8"><AvatarFallback>{sender?.name.charAt(0)}</AvatarFallback></Avatar>}
+                                     <div className={`max-w-xs rounded-lg p-3 ${isMe ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                                         <p className="text-sm">{msg.text}</p>
+                                     </div>
+                                      {isMe && <Avatar className="h-8 w-8"><AvatarFallback>{sender?.name.charAt(0)}</AvatarFallback></Avatar>}
+                                 </div>
                                )
-                           })}
-                        </div>
-                        <div className="mt-4 flex gap-2 pt-4 border-t">
-                            <Input 
-                                placeholder="Type a message..." 
-                                value={newMessage} 
-                                onChange={(e) => setNewMessage(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                            />
-                            <Button onClick={handleSendMessage}><Send className="h-4 w-4" /></Button>
-                        </div>
-                     </div>
+                            })}
+                         </div>
+                         <div className="mt-4 flex gap-2 pt-4 border-t">
+                             <Input 
+                                 placeholder="Type a message..." 
+                                 value={newMessage} 
+                                 onChange={(e) => setNewMessage(e.target.value)}
+                                 onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                             />
+                             <Button onClick={handleSendMessage}><Send className="h-4 w-4" /></Button>
+                         </div>
+                       </div>
                   ) : (
                     <div className="text-center text-muted-foreground">
                       <p>Chat is available after an item has been claimed by a collector.</p>
