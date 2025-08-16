@@ -20,7 +20,6 @@ import { Label } from '@/components/ui/label';
 import { useListings } from '@/context/listing-context';
 import { cn } from '@/lib/utils';
 
-// This is the correct way to type props for a dynamic page
 export default function ListingDetailPage({ params }: { params: { id: string } }) {
   const { user } = useAuth();
   const router = useRouter();
@@ -29,23 +28,18 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
   const { listings, updateListing, messages, addMessage } = useListings();
   const [isClient, setIsClient] = useState(false);
   const [hoverRating, setHoverRating] = useState(0);
-
-  // IMPROVEMENT: Use React state to manage the cashback input value instead of direct DOM access.
   const [cashbackAmount, setCashbackAmount] = useState('');
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  const listing = listings.find((l) => l.id === params.id);
-  const listingMessages = messages.filter(m => m.listingId === params.id);
-  
-  // IMPROVEMENT: Handle the "not found" case by returning JSX.
-  // This is safer inside a client component than calling notFound() after hooks.
   if (!isClient) {
-    // Render a loading state or nothing during server-side rendering / initial hydration
     return <div>Loading...</div>;
   }
+
+  const listing = listings.find((l) => l.id === params.id);
+  const listingMessages = messages.filter(m => m.listingId === params.id);
 
   if (!listing) {
     return (
@@ -61,7 +55,6 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
   const donor = users.find((u) => u.id === listing.donorId);
   const collector = users.find((u) => u.id === listing.collectorId);
 
-  // IMPROVEMENT: Add a check for the donor to prevent potential errors if not found.
   if (!donor) {
      return (
       <div className="flex min-h-screen flex-col items-center justify-center">
@@ -93,9 +86,7 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
   
   const handleClaim = (isOfferSubmitted: boolean) => {
     if (!user) return;
-    
-    // IMPROVEMENT: Use the state variable for cashback amount.
-    const offer = isOfferSubmitted ? parseFloat(cashbackAmount) || 0 : undefined;
+    const offer = isOfferSubmitted ? parseFloat(cashbackAmount) || undefined : undefined;
 
     updateListing(listing.id, {
       status: 'claimed',
@@ -158,7 +149,6 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                               alt={`${listing.title} image ${index + 1}`}
                               fill
                               className="rounded-md object-cover"
-                              data-ai-hint="e-waste electronics"
                             />
                           </div>
                         </CarouselItem>
@@ -211,13 +201,12 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                         <AlertDialogHeader>
                           <AlertDialogTitle>Make a Cashback Offer (Optional)</AlertDialogTitle>
                           <AlertDialogDescription>
-                            If this item has value, you can offer the donor a cashback amount. A 10% platform fee will be applied to this amount.
+                            If this item has value, you can offer the donor a cashback amount.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <div className="grid gap-4 py-4">
                           <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="cashback-amount" className="text-right">Amount ($)</Label>
-                            {/* IMPROVEMENT: Controlled input using React state */}
                             <Input 
                               id="cashback-amount" 
                               type="number" 
@@ -231,7 +220,6 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                            <AlertDialogAction onClick={() => handleClaim(false)}>Claim without Offer</AlertDialogAction>
-                           {/* IMPROVEMENT: Use the state variable in the handler */}
                           <AlertDialogAction onClick={() => handleClaim(true)}>Submit Offer & Claim</AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
@@ -302,11 +290,11 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                                const isMe = user?.id === msg.senderId;
                                return (
                                  <div key={msg.id} className={`flex items-end gap-2 ${isMe ? 'justify-end' : ''}`}>
-                                     {!isMe && <Avatar className="h-8 w-8"><AvatarFallback>{sender?.name.charAt(0)}</AvatarFallback></Avatar>}
+                                     {!isMe && sender && <Avatar className="h-8 w-8"><AvatarFallback>{sender.name.charAt(0)}</AvatarFallback></Avatar>}
                                      <div className={`max-w-xs rounded-lg p-3 ${isMe ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
                                          <p className="text-sm">{msg.text}</p>
                                      </div>
-                                      {isMe && <Avatar className="h-8 w-8"><AvatarFallback>{sender?.name.charAt(0)}</AvatarFallback></Avatar>}
+                                      {isMe && sender && <Avatar className="h-8 w-8"><AvatarFallback>{sender.name.charAt(0)}</AvatarFallback></Avatar>}
                                  </div>
                                )
                             })}
