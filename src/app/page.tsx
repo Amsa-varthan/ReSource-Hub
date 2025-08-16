@@ -111,12 +111,12 @@ export default function LandingPage() {
                 <div className="absolute -left-10 top-0 h-48 w-48 animate-blob rounded-full bg-primary/20 opacity-50 blur-2xl filter"></div>
                 <div className="animation-delay-2000 absolute -right-10 bottom-0 h-48 w-48 animate-blob rounded-full bg-accent/20 opacity-50 blur-2xl filter"></div>
                 <div className="relative">
+                  {/* SUGGESTION: Replace this placeholder image with a real one in your /public folder */}
                   <Image
-                    src="https://placehold.co/600x400.png"
-                    data-ai-hint="e-waste electronics"
+                    src="/hero-image.jpg"
                     width={600}
                     height={400}
-                    alt="E-waste collage"
+                    alt="A collection of electronic devices like laptops, phones, and monitors ready for recycling"
                     className="rounded-xl shadow-2xl"
                   />
                   <div className="absolute -bottom-8 -left-8 z-10 hidden md:block">
